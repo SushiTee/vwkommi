@@ -1,0 +1,21 @@
+"""Local settings module.
+
+Rename this module file to *settings_local.py* to apply the settings. This module loads the default
+settings and overwrites all values specified here.
+"""
+from vwkommi.settings_default import * # pylint: disable=wildcard-import,unused-wildcard-import
+
+# VW user data
+VW_USERNAME = 'example_user'
+VW_PASSWORD = 'example_password'
+
+# commission number range
+COMMISSION_NUMBER_RANGE = [
+    ('AF', 5000, 9999),
+    ('AG', 0, 9999),
+    ('AH', 0, 9999),
+    ('AI', 0, 9999),
+    ('AJ', 0, 9999),
+    ('AK', 0, 9999),
+    ('AL', 0, 9999),
+]
