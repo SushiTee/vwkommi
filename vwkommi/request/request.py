@@ -19,6 +19,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
     IMAGE_URL = 'https://vehicle-image.apps.emea.vwapps.io/vehicleimages/exterior/'
 
     YEAR = 2020
+    TRY_YEARS = [2020, 2021, 2022, 2023]
 
     def __init__(self) -> None:
         auth = Auth()
@@ -80,10 +81,16 @@ class DataRequest: # pylint: disable=too-few-public-methods
                             file.write(',\n')
                         first = False
 
+                        # get results from threads
                         (year, kommi, data_response, details_response, production_response,
                          image_response) = result
+
+                        # store latest successful year for next requests to lower 404 requests
+                        # this is not perfect due to the threads but better than nothing
                         if year != DataRequest.YEAR:
                             DataRequest.YEAR = year
+
+                        # write to file
                         file.write('"' + kommi + '": [' + data_response + ',' +  details_response +
                                    ',' +  production_response + ',' +  image_response + ']')
                         print(('Progress: '
@@ -107,9 +114,12 @@ class DataRequest: # pylint: disable=too-few-public-methods
         # to store prefix for future requests with this worker once found by the following loop
         response = None
         prefix = 0
+        # build list with years to check beginning with the "most" likely
+        years = [year]
+        years.extend([_year for _year in DataRequest.TRY_YEARS if _year != year])
         for _prefix in prefix_list: # try all prefixes
             success = False
-            for _year in range(year, 2024): # try years until 2023
+            for _year in years:
                 response = requests.get(f'{DataRequest.DATA_URL}{_prefix}{_year}{url_append}',
                                         headers=headers)
                 if response.status_code != 200:
