@@ -9,6 +9,11 @@ from vwkommi.settings_default import * # pylint: disable=wildcard-import,unused-
 VW_USERNAME = 'example_user'
 VW_PASSWORD = 'example_password'
 
+# known request prefixes
+PREFIX_LIST = [185, 900, 877, 902] # known prefixes for ID.3/4/5
+#PREFIX_LIST = [188] # known prefix for ID.Buzz
+#PREFIX_LIST = [183] # known for Golf 8
+
 # commission number range
 COMMISSION_NUMBER_RANGE = [
     ('AF', 5000, 9999),

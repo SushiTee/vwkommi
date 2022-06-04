@@ -8,6 +8,9 @@ BASE_DIR = os.path.dirname(__file__)
 VW_USERNAME = 'example_user'
 VW_PASSWORD = 'example_password'
 
+# known request prefixes
+PREFIX_LIST = [185, 900, 877, 902] # known prefixes for ID.3/4/5
+
 # commission number range
 COMMISSION_NUMBER_RANGE = [
     ('AF', 5000, 9999),

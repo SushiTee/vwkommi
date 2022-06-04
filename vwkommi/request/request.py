@@ -7,7 +7,7 @@ import os
 import requests
 import secrets
 from vwkommi.request.auth import Auth
-from vwkommi.settings import BASE_DIR, COMMISSION_NUMBER_RANGE
+from vwkommi.settings import BASE_DIR, COMMISSION_NUMBER_RANGE, PREFIX_LIST
 
 class DataRequest: # pylint: disable=too-few-public-methods
     """Class performing requests.
@@ -155,7 +155,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
     def __requests_worker(args) -> Union[bool, tuple]:
         """worker thread"""
         # basic data for request
-        prefix_list = [185, 900, 877, 902] # possible prefixes
+        prefix_list = PREFIX_LIST # possible prefixes
         year = DataRequest.YEAR
         kommi_pre, index, headers = args # args for the worker
         shutdown = False # variable to stop worker
