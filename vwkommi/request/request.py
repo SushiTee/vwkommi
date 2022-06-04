@@ -130,13 +130,14 @@ class DataRequest: # pylint: disable=too-few-public-methods
             if not 'modelName' in response:
                 print('Model name not within vehicle data')
                 return False
+            model_name = response["modelName"]
             headers = self.headers
             headers['traceId'] = (f'{secrets.token_hex(4)}-{secrets.token_hex(2)}-'
                                   f'{secrets.token_hex(2)}-{secrets.token_hex(2)}-'
                                   f'{secrets.token_hex(6)}')
             headers['Content-Type'] = 'application/json'
             json_data = {
-                'vehicleNickname': f'{response["modelName"]}',
+                'vehicleNickname': f'{model_name}',
                 'vehicle': {
                     'commissionId': f'{commission_number}-{prefix}-{year}'
                 }
@@ -148,7 +149,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
             if response.status_code != 201:
                 print('Request to add car failed.', response.status_code)
                 return False
-            print(f'Added car: {response["modelName"]} (year: {year}, prefix: {prefix})')
+            print(f'Added car: {model_name} (year: {year}, prefix: {prefix})')
             return True
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
