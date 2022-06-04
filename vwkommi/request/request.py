@@ -118,6 +118,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
         """Tries to add a commission number to the profile."""
         result = self.find_prefix(commission_number=commission_number)
         if isinstance(result, bool):
+            print("No car seems to match the commission number.")
             return False
         else:
             prefix, year = result
