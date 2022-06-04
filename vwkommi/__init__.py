@@ -45,7 +45,7 @@ class VwKommi: # pylint: disable=too-few-public-methods
         if args.commission_number_find is not None:
             result = data_request.find_prefix(args.commission_number_find)
             if isinstance(result, bool):
-                print(f'No prefix year combination found!')
+                print('No prefix year combination found!')
             else:
                 prefix, year = result
                 print(f'Prefix: {prefix}, year: {year}')
