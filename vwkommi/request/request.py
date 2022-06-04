@@ -148,6 +148,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
             if response.status_code != 201:
                 print('Request to add car failed.', response.status_code)
                 return False
+            print(f'Added car: {response["modelName"]} (year: {year}, prefix: {prefix})')
             return True
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
