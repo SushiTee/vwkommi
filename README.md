@@ -120,6 +120,8 @@ All settings made there override the default settings set in _settings_default.p
 
 **Make sure you enter your user data within the _settings_local.py_.**
 
+The range of the commission numbers to be requested can be set as well.
+
 ## Usage
 
 As VW Kommi is a python module it is run using the _-m_ parameter of the _python_ command:
@@ -133,3 +135,16 @@ The following subcommands are available:
 * request - Requests data from VW and stores them into the _raw_data_ directory
 
 Within the _settings_local.py_ you can set the range commission numbers to be requested.
+
+**request sub command**
+
+The _request_ sub command supports two additional options:
+
+* -f, --find-prefix - Find the prefix and year of a commission number    
+  ```shell
+  python -m vwkommi request -f AL1234
+  ```
+* -a, --add-to-profile - Tries to add a car with a given commission to your profile    
+  ```shell
+  python -m vwkommi request -a AL1234
+  ```

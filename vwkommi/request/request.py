@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 import requests
+import secrets
 from vwkommi.request.auth import Auth
 from vwkommi.settings import BASE_DIR, COMMISSION_NUMBER_RANGE
 
@@ -17,6 +18,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
     DATA_URL = 'https://myvw-gvf-proxy.apps.emea.vwapps.io/vehicleData/de-DE/'
     VIN_URL = 'https://vdbs.apps.emea.vwapps.io/v1/vehicles/'
     IMAGE_URL = 'https://vehicle-image.apps.emea.vwapps.io/vehicleimages/exterior/'
+    PROFILE_URL = 'https://vum.apps.emea.vwapps.io/v1/dataStorageManagement/users/me/relations'
 
     YEAR = 2020
     TRY_YEARS = [2020, 2021, 2022, 2023]
@@ -101,6 +103,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
 
     def find_prefix(self, commission_number: str) -> Union[bool, tuple]:
         """Finds the prefix of a certain commission number."""
+        print('Start looking for car.')
         map_args = [
             [commission_number, arg, self.headers]
             for arg in range(1000)
@@ -110,6 +113,41 @@ class DataRequest: # pylint: disable=too-few-public-methods
                 if not isinstance(result, bool):
                     return result
         return False
+
+    def add_to_profile(self, commission_number: str) -> bool:
+        """Tries to add a commission number to the profile."""
+        result = self.find_prefix(commission_number=commission_number)
+        if isinstance(result, bool):
+            return False
+        else:
+            prefix, year = result
+            response = requests.get(f'{DataRequest.DATA_URL}{prefix}{year}{commission_number}',
+                                        headers=self.headers)
+            if response.status_code != 200:
+                return False
+            response = response.json()
+            if not 'modelName' in response:
+                print('Model name not within vehicle data')
+                return False
+            headers = self.headers
+            headers['traceId'] = (f'{secrets.token_hex(4)}-{secrets.token_hex(2)}-'
+                                  f'{secrets.token_hex(2)}-{secrets.token_hex(2)}-'
+                                  f'{secrets.token_hex(6)}')
+            headers['Content-Type'] = 'application/json'
+            json_data = {
+                'vehicleNickname': f'{response["modelName"]}',
+                'vehicle': {
+                    'commissionId': f'{commission_number}-{prefix}-{year}'
+                }
+            }
+            response = requests.post(DataRequest.PROFILE_URL, headers=headers, json=json_data)
+            if response.status_code == 422:
+                print('Car already added to profile')
+                return False
+            if response.status_code != 201:
+                print('Request to add car failed.', response.status_code)
+                return False
+            return True
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     @staticmethod
