@@ -11,6 +11,7 @@ VW_PASSWORD = 'example_password'
 
 # known request prefixes
 PREFIX_LIST = [185, 900, 877, 902] # known prefixes for ID.3/4/5
+#PREFIX_LIST = [184] # known for ID.Buzz
 #PREFIX_LIST = [188] # known prefix for Tiguan
 #PREFIX_LIST = [183] # known for Golf 8
 
