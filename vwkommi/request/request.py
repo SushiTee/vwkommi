@@ -56,7 +56,12 @@ class DataRequest: # pylint: disable=too-few-public-methods
 
                     first = True # just to put all the commas correctly
                     map_args = [
-                        [kommi_item[0], arg, self.headers]
+                        [
+                            kommi_item[0],
+                            kommi_item[3] if len(kommi_item) >= 4 else 4,
+                            arg,
+                            self.headers
+                        ]
                         for arg in range(kommi_item[1], kommi_item[2] + 1)
                     ]
                     for result in executor.map(DataRequest.__requests_worker, map_args):
@@ -159,9 +164,9 @@ class DataRequest: # pylint: disable=too-few-public-methods
         # basic data for request
         prefix_list = PREFIX_LIST # possible prefixes
         year = DataRequest.YEAR
-        kommi_pre, index, headers = args # args for the worker
+        kommi_pre, number_length, index, headers = args # args for the worker
         shutdown = False # variable to stop worker
-        url_append = f'{kommi_pre}{index:04d}' # commission number (e.g. AF1234)
+        url_append = f'{kommi_pre}{index:0{number_length}d}' # commission number (e.g. AF1234)
 
         # request general car data
         # to store prefix for future requests with this worker once found by the following loop
