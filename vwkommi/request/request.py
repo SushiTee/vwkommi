@@ -57,7 +57,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
                         [kommi_item[0], arg, self.headers]
                         for arg in range(kommi_item[1], kommi_item[2] + 1)
                     ]
-                    for result in executor.map(DataRequest.__worker, map_args):
+                    for result in executor.map(DataRequest.__requests_worker, map_args):
                         handled_kommis += 1
 
                         # check result for bool value
@@ -99,9 +99,21 @@ class DataRequest: # pylint: disable=too-few-public-methods
 
                     file.write('\n}\n') # last line
 
+    def find_prefix(self, commission_number: str) -> Union[bool, tuple]:
+        """Finds the prefix of a certain commission number."""
+        map_args = [
+            [commission_number, arg, self.headers]
+            for arg in range(1000)
+        ]
+        with ThreadPoolExecutor(max_workers=30) as executor: # 30 threads
+            for result in executor.map(DataRequest.__find_commission_number_worker, map_args):
+                if not isinstance(result, bool):
+                    return result
+        return False
+
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     @staticmethod
-    def __worker(args) -> Union[bool, tuple]:
+    def __requests_worker(args) -> Union[bool, tuple]:
         """worker thread"""
         # basic data for request
         prefix_list = [185, 900, 877, 902] # possible prefixes
@@ -235,3 +247,13 @@ class DataRequest: # pylint: disable=too-few-public-methods
                 json.dumps(details_response, separators=(',', ':'), ensure_ascii=False),
                 json.dumps(production_json, separators=(',', ':'), ensure_ascii=False),
                 json.dumps(image_json, separators=(',', ':'), ensure_ascii=False))
+
+    @staticmethod
+    def __find_commission_number_worker(args) -> Union[bool, tuple]:
+        commission_number, prefix, headers = args
+        for _year in DataRequest.TRY_YEARS:
+            response = requests.get(f'{DataRequest.DATA_URL}{prefix}{_year}{commission_number}',
+                                            headers=headers)
+            if response.status_code == 200:
+                return (prefix, _year)
+        return False

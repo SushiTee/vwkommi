@@ -36,6 +36,16 @@ class VwKommi: # pylint: disable=too-few-public-methods
         There are no arguments except for the default _-h_ for help.
         """
         parser = argparse.ArgumentParser(description='VW Kommi Requests')
-        parser.parse_args(sys.argv[2:])
+        parser.add_argument('-f', '--find-prefix', dest='commission_number', default=None,
+                        help='Tries to find the prefix for a specific commission number')
+        args = parser.parse_args(sys.argv[2:])
         data_request = DataRequest()
+        if args.commission_number is not None:
+            result = data_request.find_prefix(args.commission_number)
+            if isinstance(result, bool):
+                print(f'No prefix year combination found!')
+            else:
+                prefix, year = result
+                print(f'Prefix: {prefix}, year: {year}')
+            return
         data_request.do_requests()
