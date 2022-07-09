@@ -11,6 +11,9 @@ VW_PASSWORD = 'example_password'
 # known request prefixes
 PREFIX_LIST = [185, 900, 877, 902] # known prefixes for ID.3/4/5
 
+# skip requesting extra details for cars with VIN like line drawings
+SKIP_VIN_DETAILS = True
+
 # commission number range
 COMMISSION_NUMBER_RANGE = [
     ('AF', 5000, 9999, 4),

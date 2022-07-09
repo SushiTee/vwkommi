@@ -6,8 +6,9 @@ import json
 import os
 import requests
 import secrets
+import time
 from vwkommi.request.auth import Auth
-from vwkommi.settings import BASE_DIR, COMMISSION_NUMBER_RANGE, PREFIX_LIST
+from vwkommi.settings import BASE_DIR, COMMISSION_NUMBER_RANGE, PREFIX_LIST, SKIP_VIN_DETAILS
 
 class DataRequest: # pylint: disable=too-few-public-methods
     """Class performing requests.
@@ -202,7 +203,7 @@ class DataRequest: # pylint: disable=too-few-public-methods
         production_json = None
         image_status = {'codeText':'Bild: keine FIN'}
         image_json = None
-        if 'vin' in data_response:
+        if SKIP_VIN_DETAILS is False and 'vin' in data_response:
             vin = data_response['vin'] # store VIN
 
             # request production data
