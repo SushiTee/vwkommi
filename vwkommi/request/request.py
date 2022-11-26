@@ -12,6 +12,7 @@ from vwkommi.settings import (
     COMMISSION_NUMBER_RANGE,
     PREFIX_LIST,
     SKIP_VIN_DETAILS,
+    WORKER_COUNT
 )
 
 
@@ -56,7 +57,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         if not os.path.exists(os.path.join(BASE_DIR, "raw_data")):
             os.mkdir(os.path.join(BASE_DIR, "raw_data"))
         for kommi_item in COMMISSION_NUMBER_RANGE:  # loop over every range
-            with ThreadPoolExecutor(max_workers=30) as executor:  # 30 threads
+            with ThreadPoolExecutor(max_workers=WORKER_COUNT) as executor:  # WORKER_COUNT threads
                 map_args = [
                     [
                         kommi_item[0],
