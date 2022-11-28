@@ -6,6 +6,7 @@ import json
 import os
 import requests
 import secrets
+import time
 from vwkommi.request.auth import Auth
 from vwkommi.settings import (
     BASE_DIR,
@@ -34,8 +35,8 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     TRY_YEARS = [2020, 2021, 2022, 2023]
 
     def __init__(self) -> None:
-        auth = Auth()
-        self.headers = {"Authorization": auth.get_token()}
+        self.auth = Auth()
+        self.headers = {"Authorization": self.auth.get_token()}
         self.year = 2020
         self.num_404 = 0
         self.commission_number_count = 0
@@ -63,7 +64,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
                         kommi_item[0],
                         kommi_item[3] if len(kommi_item) >= 4 else 4,
                         arg,
-                        self.headers,
+                        self
                     ]
                     for arg in range(kommi_item[1], kommi_item[2] + 1)
                 ]
@@ -200,14 +201,43 @@ class DataRequest:  # pylint: disable=too-few-public-methods
             print(f"Added car: {model_name} (year: {year}, prefix: {prefix})")
             return True
 
+    def reset_login(self):
+        self.auth.reset_token()
+        self.headers = {"Authorization": self.auth.get_token()}
+
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     @staticmethod
     def __requests_worker(args) -> Union[bool, tuple]:
         """worker thread"""
+
+        # inner function to handle actual request including relogin once
+        def __data_request(_url: str):
+            response = requests.get(
+                _url,
+                headers=self.headers,
+            )
+            # try request once again
+            if response.status_code == 401 or response.status_code == 502:
+                self.reset_login()
+                response = requests.get(
+                    _url,
+                    headers=self.headers,
+                )
+            return response
+
+        def __busy_wait() -> bool:
+            wait_count = 0
+            while not self.auth.is_authenticated():
+                time.sleep(1)
+                wait_count += 1
+                if wait_count == 9:
+                    return False
+            return True
+
         # basic data for request
         prefix_list = PREFIX_LIST  # possible prefixes
         year = DataRequest.YEAR
-        kommi_pre, number_length, index, headers = args  # args for the worker
+        kommi_pre, number_length, index, self = args  # args for the worker
         shutdown = False  # variable to stop worker
         url_append = (
             f"{kommi_pre}{index:0{number_length}d}"  # commission number (e.g. AF1234)
@@ -223,9 +253,13 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         for _prefix in prefix_list:  # try all prefixes
             success = False
             for _year in years:
-                response = requests.get(
-                    f"{DataRequest.DATA_URL}{_prefix}{_year}{url_append}",
-                    headers=headers,
+
+                # simply wait some time until the next login or give up after 10s
+                if not __busy_wait():
+                    return True
+
+                response = __data_request(
+                    f"{DataRequest.DATA_URL}{_prefix}{_year}{url_append}"
                 )
                 if response.status_code != 200:
                     if response.status_code == 404:
@@ -254,9 +288,13 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         if SKIP_VIN_DETAILS is False and "vin" in data_response:
             vin = data_response["vin"]  # store VIN
 
+            # simply wait some time until the next login or give up after 10s
+            if not __busy_wait():
+                return True
+
             # request production data
-            response = requests.get(
-                f"{DataRequest.VIN_URL}{vin}/device-platform", headers=headers
+            response = __data_request(
+                f"{DataRequest.VIN_URL}{vin}/device-platform"
             )
             if response.status_code != 200:
                 if response.status_code == 401:
@@ -274,8 +312,12 @@ class DataRequest:  # pylint: disable=too-few-public-methods
                 "connected": production_json["connected"],
             }
 
+            # simply wait some time until the next login or give up after 10s
+            if not __busy_wait():
+                return True
+
             # request line drawing
-            response = requests.get(f"{DataRequest.IMAGE_URL}{vin}", headers=headers)
+            response = __data_request(f"{DataRequest.IMAGE_URL}{vin}")
             if response.status_code != 200:
                 if response.status_code == 401:
                     shutdown = True
@@ -288,9 +330,13 @@ class DataRequest:  # pylint: disable=too-few-public-methods
             image_status = {"codeText": f"Bild: {image_status_str}"}
             image_json = {"hasImages": has_images}
 
+        # simply wait some time until the next login or give up after 10s
+        if not __busy_wait():
+            return True
+
         # request detailed car data
-        response = requests.get(
-            f"{DataRequest.DETAILS_URL}{prefix}{year}{url_append}", headers=headers
+        response = __data_request(
+            f"{DataRequest.DETAILS_URL}{prefix}{year}{url_append}"
         )
         if response.status_code != 200:
             if response.status_code == 401:

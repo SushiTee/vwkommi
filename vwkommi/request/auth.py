@@ -35,6 +35,14 @@ class Auth:  # pylint: disable=too-few-public-methods
                 return ""
         return self.token
 
+    def reset_token(self) -> None:
+        """Resets auth token."""
+        self.token = ""
+
+    def is_authenticated(self) -> bool:
+        """Checks if there is a token."""
+        return len(self.token) > 0
+
     def __do_login(self) -> bool:
         """Performs the login
 
