@@ -40,6 +40,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         self.year = 2020
         self.num_404 = 0
         self.commission_number_count = 0
+        self.session = requests.session()
         for kommi_item in COMMISSION_NUMBER_RANGE:
             self.commission_number_count += (kommi_item[2] - kommi_item[1]) + 1
 
@@ -150,7 +151,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     def find_prefix(self, commission_number: str) -> Union[bool, tuple]:
         """Finds the prefix of a certain commission number."""
         print("Start looking for car.")
-        map_args = [[commission_number, arg, self.headers] for arg in range(1000)]
+        map_args = [[commission_number, arg, self.headers, self.session] for arg in range(1000)]
         with ThreadPoolExecutor(max_workers=30) as executor:  # 30 threads
             for result in executor.map(
                 DataRequest.__find_commission_number_worker, map_args
@@ -167,7 +168,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
             return False
         else:
             prefix, year = result
-            response = requests.get(
+            response = self.session.get(
                 f"{DataRequest.DATA_URL}{prefix}{year}{commission_number}",
                 headers=self.headers,
             )
@@ -189,7 +190,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
                 "vehicleNickname": f"{model_name}",
                 "vehicle": {"commissionId": f"{commission_number}-{prefix}-{year}"},
             }
-            response = requests.post(
+            response = self.session.post(
                 DataRequest.PROFILE_URL, headers=headers, json=json_data
             )
             if response.status_code == 422:
@@ -212,7 +213,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
 
         # inner function to handle actual request including relogin once
         def __data_request(_url: str):
-            response = requests.get(
+            response = self.session.get(
                 _url,
                 headers=self.headers,
             )
@@ -404,9 +405,9 @@ class DataRequest:  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def __find_commission_number_worker(args) -> Union[bool, tuple]:
-        commission_number, prefix, headers = args
+        commission_number, prefix, headers, session = args
         for _year in DataRequest.TRY_YEARS:
-            response = requests.get(
+            response = session.get(
                 f"{DataRequest.DATA_URL}{prefix}{_year}{commission_number}",
                 headers=headers,
             )
