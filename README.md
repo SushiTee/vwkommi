@@ -148,3 +148,17 @@ The _request_ sub command supports two additional options:
   ```shell
   python -m vwkommi request -a AL1234
   ```
+
+## Run with Docker
+
+Instead of installing local environment you can build a docker image and run vwkommi with docker. To build the docker image execute:
+```shell
+docker build -t vwkommi .
+```
+
+To run the image create a settings_local.py (here under /srv/vwkommi/settings_local.py) and execute the following command:
+```shell
+docker run --rm -v /srv/vwkommi/raw_data/:/work/vwkommi/raw_data -v /srv/vwkommi/settings_local.py:/work/vwkommi/settings_local.py vwkommi:latest request
+```
+
+You will find then the .json files in the directory /srv/vwkommi/raw_data/.
