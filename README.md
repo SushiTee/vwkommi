@@ -13,6 +13,7 @@ VW Kommi is a simple tool to read out commission numbers of VW ID vehicles.
   - [Install VW Kommi](#install-vw-kommi)
   - [Settings](#settings)
   - [Usage](#usage)
+  - [Run with Docker](#run-with-docker)
 
 ## Install Requirements
 
@@ -147,6 +148,38 @@ The _request_ sub command supports two additional options:
 * -a, --add-to-profile - Tries to add a car with a given commission to your profile    
   ```shell
   python -m vwkommi request -a AL1234
+  ```
+
+Additionally the settings set via _settings_default.py_ or _settings_local.py_ can be overwritten by the command line:
+
+* -b, --base-dir - The directory where the downloaded data is stored. An additional directory called _raw_data_ will be created in the selected directory.    
+  ```shell
+  python -m vwkommi request -b /home/user/vwdata
+  ```
+* -w, --worker-count - The number of workers to be used to make requests (default: 30)    
+  ```shell
+  python -m vwkommi request -w 20
+  ```
+* -u, --username - The username of your account on the VW website    
+  ```shell
+  python -m vwkommi request -u example
+  ```
+* -p, --password - The password of you account on the VW website    
+  ```shell
+  python -m vwkommi request -p example
+  ```
+* -P, --prefix-list - The prefixes for commission numbers which are tried (default [185,900,877,902]).    
+  ```shell
+  python -m vwkommi request -P [123,444]
+  ```    
+  The default value is for ID.3, ID.4 and ID.5 vehicles. 
+* -s, --skip-fin-details - Set to _True_ to request additional VIN details. It may be very slow (default: True).    
+  ```shell
+  python -m vwkommi request -s True
+  ```
+* -c, --commission-number-range - Sets the ranges to be requested. The value is a list containing lists with four elements. The inner lists elements consist of the character part of the commission number. The next two elements are the actual range. The last element contains the number of characters of the number part.    
+  ```shell
+  python -m vwkommi request -c '[[\"AF\",0,5000,4],[\"AH\",123,123,4]]'
   ```
 
 ## Run with Docker

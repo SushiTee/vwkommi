@@ -2,7 +2,7 @@
 import re
 from typing import Dict, List
 import requests
-from vwkommi.settings import VW_PASSWORD, VW_USERNAME
+from vwkommi.settings import Settings
 
 
 class Auth:  # pylint: disable=too-few-public-methods
@@ -48,8 +48,10 @@ class Auth:  # pylint: disable=too-few-public-methods
 
         On success _self.token_ is set.
         """
-        email = VW_USERNAME
-        pwd = VW_PASSWORD
+        settings = Settings()
+        print(settings.username)
+        email = settings.username
+        pwd = settings.password
 
         # create session
         request = requests.session()

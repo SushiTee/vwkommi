@@ -8,13 +8,7 @@ import requests
 import secrets
 import time
 from vwkommi.request.auth import Auth
-from vwkommi.settings import (
-    BASE_DIR,
-    COMMISSION_NUMBER_RANGE,
-    PREFIX_LIST,
-    SKIP_VIN_DETAILS,
-    WORKER_COUNT
-)
+from vwkommi.settings import Settings
 
 
 class DataRequest:  # pylint: disable=too-few-public-methods
@@ -35,13 +29,14 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     TRY_YEARS = [2020, 2021, 2022, 2023]
 
     def __init__(self) -> None:
+        self.settings = Settings()
         self.auth = Auth()
         self.headers = {"Authorization": self.auth.get_token()}
         self.year = 2020
         self.num_404 = 0
         self.commission_number_count = 0
         self.session = requests.session()
-        for kommi_item in COMMISSION_NUMBER_RANGE:
+        for kommi_item in self.settings.commission_number_range:
             self.commission_number_count += (kommi_item[2] - kommi_item[1]) + 1
 
     def do_requests(self) -> None:
@@ -56,16 +51,20 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         )  # use the same time for all requests
 
         # create output directory
-        if not os.path.exists(os.path.join(BASE_DIR, "raw_data")):
-            os.mkdir(os.path.join(BASE_DIR, "raw_data"))
-        for kommi_item in COMMISSION_NUMBER_RANGE:  # loop over every range
-            with ThreadPoolExecutor(max_workers=WORKER_COUNT) as executor:  # WORKER_COUNT threads
+        if not os.path.exists(os.path.join(self.settings.base_dir, "raw_data")):
+            os.mkdir(os.path.join(self.settings.base_dir, "raw_data"))
+        for (
+            kommi_item
+        ) in self.settings.commission_number_range:  # loop over every range
+            with ThreadPoolExecutor(
+                max_workers=self.settings.worker_count
+            ) as executor:  # self.settings.worker_count threads
                 map_args = [
                     [
                         kommi_item[0],
                         kommi_item[3] if len(kommi_item) >= 4 else 4,
                         arg,
-                        self
+                        self,
                     ]
                     for arg in range(kommi_item[1], kommi_item[2] + 1)
                 ]
@@ -135,7 +134,9 @@ class DataRequest:  # pylint: disable=too-few-public-methods
                 # set file name
                 filename = f"output_{kommi_item[0]}_{kommi_item[1]}-{kommi_item[2]}_{time_str}.json"
                 with open(
-                    os.path.join(BASE_DIR, "raw_data", filename), "w", encoding="utf-8"
+                    os.path.join(self.settings.base_dir, "raw_data", filename),
+                    "w",
+                    encoding="utf-8",
                 ) as file:
                     file.write("{\n")  # first line
 
@@ -151,7 +152,9 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     def find_prefix(self, commission_number: str) -> Union[bool, tuple]:
         """Finds the prefix of a certain commission number."""
         print("Start looking for car.")
-        map_args = [[commission_number, arg, self.headers, self.session] for arg in range(1000)]
+        map_args = [
+            [commission_number, arg, self.headers, self.session] for arg in range(1000)
+        ]
         with ThreadPoolExecutor(max_workers=30) as executor:  # 30 threads
             for result in executor.map(
                 DataRequest.__find_commission_number_worker, map_args
@@ -236,9 +239,9 @@ class DataRequest:  # pylint: disable=too-few-public-methods
             return True
 
         # basic data for request
-        prefix_list = PREFIX_LIST  # possible prefixes
         year = DataRequest.YEAR
         kommi_pre, number_length, index, self = args  # args for the worker
+        prefix_list = self.settings.prefix_list  # possible prefixes
         shutdown = False  # variable to stop worker
         url_append = (
             f"{kommi_pre}{index:0{number_length}d}"  # commission number (e.g. AF1234)
@@ -286,7 +289,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         production_json = None
         image_status = {"codeText": "Bild: keine FIN"}
         image_json = None
-        if SKIP_VIN_DETAILS is False and "vin" in data_response:
+        if self.settings.skip_fin_details is False and "vin" in data_response:
             vin = data_response["vin"]  # store VIN
 
             # simply wait some time until the next login or give up after 10s
@@ -294,9 +297,7 @@ class DataRequest:  # pylint: disable=too-few-public-methods
                 return True
 
             # request production data
-            response = __data_request(
-                f"{DataRequest.VIN_URL}{vin}/device-platform"
-            )
+            response = __data_request(f"{DataRequest.VIN_URL}{vin}/device-platform")
             if response.status_code != 200:
                 if response.status_code == 401:
                     shutdown = True
