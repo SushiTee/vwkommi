@@ -17,12 +17,13 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     The requested data is stored within the _raw_data_ subdirectory
     """
 
-    DETAILS_URL = "https://myvw-gvf-proxy.apps.emea.vwapps.io/vehicleDetails/de-DE/"
-    DATA_URL = "https://myvw-gvf-proxy.apps.emea.vwapps.io/vehicleData/de-DE/"
-    VIN_URL = "https://vdbs.apps.emea.vwapps.io/v1/vehicles/"
-    IMAGE_URL = "https://vehicle-image.apps.emea.vwapps.io/vehicleimages/exterior/"
+    DETAILS_URL = "https://myvw-gvf-proxy-prod.apps.mega.cariad.cloud/vehicleDetails/de-DE/"
+    DATA_URL = "https://myvw-gvf-proxy-prod.apps.mega.cariad.cloud/vehicleData/de-DE/"
+    VIN_URL = "https://production.emea.vdbs.cariad.digital/v1/vehicles/"
+    IMAGE_URL = "https://myvw-vilma-proxy-prod.apps.mega.cariad.cloud/vehicleimages/exterior/"
+
     PROFILE_URL = (
-        "https://vum.apps.emea.vwapps.io/v1/dataStorageManagement/users/me/relations"
+        "https://apps.emea.vum.cariad.digital/v2/users/me/relations"
     )
 
     YEAR = 2020
@@ -31,7 +32,10 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     def __init__(self) -> None:
         self.settings = Settings()
         self.auth = Auth()
-        self.headers = {"Authorization": self.auth.get_token()}
+        self.headers = {
+            "Authorization": self.auth.get_token(),
+            "User-Agent": 'Chrome v22.2 Linux Ubuntu'
+        }
         self.year = 2020
         self.num_404 = 0
         self.commission_number_count = 0
