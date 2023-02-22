@@ -17,14 +17,16 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     The requested data is stored within the _raw_data_ subdirectory
     """
 
-    DETAILS_URL = "https://myvw-gvf-proxy-prod.apps.mega.cariad.cloud/vehicleDetails/de-DE/"
+    DETAILS_URL = (
+        "https://myvw-gvf-proxy-prod.apps.mega.cariad.cloud/vehicleDetails/de-DE/"
+    )
     DATA_URL = "https://myvw-gvf-proxy-prod.apps.mega.cariad.cloud/vehicleData/de-DE/"
     VIN_URL = "https://production.emea.vdbs.cariad.digital/v1/vehicles/"
-    IMAGE_URL = "https://myvw-vilma-proxy-prod.apps.mega.cariad.cloud/vehicleimages/exterior/"
-
-    PROFILE_URL = (
-        "https://apps.emea.vum.cariad.digital/v2/users/me/relations"
+    IMAGE_URL = (
+        "https://myvw-vilma-proxy-prod.apps.mega.cariad.cloud/vehicleimages/exterior/"
     )
+
+    PROFILE_URL = "https://apps.emea.vum.cariad.digital/v2/users/me/relations"
 
     YEAR = 2020
     TRY_YEARS = [2020, 2021, 2022, 2023]
@@ -32,9 +34,11 @@ class DataRequest:  # pylint: disable=too-few-public-methods
     def __init__(self) -> None:
         self.settings = Settings()
         self.auth = Auth()
+        if self.auth.get_token() == "":
+            return
         self.headers = {
             "Authorization": self.auth.get_token(),
-            "User-Agent": 'Chrome v22.2 Linux Ubuntu'
+            "User-Agent": "Chrome v22.2 Linux Ubuntu",
         }
         self.year = 2020
         self.num_404 = 0
@@ -42,6 +46,10 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         self.session = requests.session()
         for kommi_item in self.settings.commission_number_range:
             self.commission_number_count += (kommi_item[2] - kommi_item[1]) + 1
+
+    def is_authenticated(self) -> bool:
+        """Returns true if there is a authentication token."""
+        return self.auth.is_authenticated()
 
     def do_requests(self) -> None:
         """Performs all requests and stores the results to the file system.
@@ -261,7 +269,6 @@ class DataRequest:  # pylint: disable=too-few-public-methods
         for _prefix in prefix_list:  # try all prefixes
             success = False
             for _year in years:
-
                 # simply wait some time until the next login or give up after 10s
                 if not __busy_wait():
                     return True

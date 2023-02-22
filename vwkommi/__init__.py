@@ -116,6 +116,13 @@ class VwKommi:  # pylint: disable=too-few-public-methods
             print("There was an error while overwriting the settings values.")
             return
         data_request = DataRequest()
+        if data_request.is_authenticated() is False:
+            print(
+                "An error occurred during login. Please check your user data "
+                "or if the VW URLs are still valid. You have to accept the "
+                "terms of use of VW as well. Therefore login with your browser once.!"
+            )
+            return
         if args.commission_number_find is not None:
             result = data_request.find_prefix(args.commission_number_find)
             if isinstance(result, bool):

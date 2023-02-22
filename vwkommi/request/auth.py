@@ -49,7 +49,6 @@ class Auth:  # pylint: disable=too-few-public-methods
         On success _self.token_ is set.
         """
         settings = Settings()
-        print(settings.username)
         email = settings.username
         pwd = settings.password
 
